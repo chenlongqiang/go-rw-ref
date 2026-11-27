@@ -1,0 +1,8 @@
+# 白名单模式：只把运行插件和市场展示需要的文件打进 VSIX。
+**
+!package.json
+!README.md
+!CHANGELOG.md
+!LICENSE
+!images/icon.png
+!out/*.js

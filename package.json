@@ -1,0 +1,226 @@
+{
+  "name": "go-rw-references",
+  "displayName": "Go Read/Write References",
+  "description": "Find All References for Go, grouped into Write / Read / Declaration. gopls semantics with a syntax fallback. 按写入、读取、声明分组展示 Go 引用。",
+  "version": "0.3.1",
+  "publisher": "lukachen",
+  "author": {
+    "name": "lukachen"
+  },
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1E3A5F",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chenlongqiang/go-rw-ref.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chenlongqiang/go-rw-ref/issues"
+  },
+  "homepage": "https://github.com/chenlongqiang/go-rw-ref#readme",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "go",
+    "golang",
+    "references",
+    "find all references",
+    "find usages",
+    "read write",
+    "write access",
+    "gopls",
+    "goland"
+  ],
+  "activationEvents": [
+    "onLanguage:go"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "goRw.findReferences",
+        "title": "Go: 查找读写引用 (Find Read/Write References)",
+        "category": "Go R/W"
+      },
+      {
+        "command": "goRw.refresh",
+        "title": "重新查找",
+        "category": "Go R/W",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "goRw.clear",
+        "title": "清空结果",
+        "category": "Go R/W",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "goRw.hideTests",
+        "title": "隐藏测试文件",
+        "category": "Go R/W",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "goRw.showTests",
+        "title": "显示测试文件",
+        "category": "Go R/W",
+        "icon": "$(beaker-stop)"
+      },
+      {
+        "command": "goRw.openReference",
+        "title": "打开",
+        "category": "Go R/W"
+      },
+      {
+        "command": "goRw.openReferenceToSide",
+        "title": "在侧边打开",
+        "category": "Go R/W"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "goRw.findReferences",
+        "key": "alt+f7",
+        "when": "editorTextFocus && editorLangId == go"
+      }
+    ],
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "goRwPanel",
+          "title": "Go 读写引用",
+          "icon": "$(references)"
+        }
+      ]
+    },
+    "views": {
+      "goRwPanel": [
+        {
+          "id": "goRwReferences",
+          "name": "读写引用"
+        }
+      ]
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "goRw.findReferences",
+          "when": "editorLangId == go",
+          "group": "navigation@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "goRw.hideTests",
+          "when": "view == goRwReferences && !goRw.testsHidden",
+          "group": "navigation@1"
+        },
+        {
+          "command": "goRw.showTests",
+          "when": "view == goRwReferences && goRw.testsHidden",
+          "group": "navigation@1"
+        },
+        {
+          "command": "goRw.refresh",
+          "when": "view == goRwReferences",
+          "group": "navigation@2"
+        },
+        {
+          "command": "goRw.clear",
+          "when": "view == goRwReferences",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "goRw.openReferenceToSide",
+          "when": "view == goRwReferences && viewItem == goRwReference",
+          "group": "navigation@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "goRw.openReference",
+          "when": "false"
+        },
+        {
+          "command": "goRw.openReferenceToSide",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Go Read/Write References",
+      "properties": {
+        "goRw.openLocation": {
+          "type": "string",
+          "enum": [
+            "activeGroup",
+            "beside"
+          ],
+          "enumDescriptions": [
+            "在当前活动的编辑器分组中打开（默认）",
+            "在右侧分组中打开"
+          ],
+          "default": "activeGroup",
+          "description": "点击引用结果时，代码在哪个编辑器分组中打开。"
+        },
+        "goRw.previewMode": {
+          "type": "boolean",
+          "default": true,
+          "description": "以预览标签页打开，连续点击结果时复用同一个标签页，避免标签页堆积。"
+        },
+        "goRw.preserveFocus": {
+          "type": "boolean",
+          "default": true,
+          "description": "打开引用后保持焦点在结果面板，便于连续浏览；关闭后焦点会移到编辑器。"
+        },
+        "goRw.includeDeclaration": {
+          "type": "boolean",
+          "default": true,
+          "description": "结果中包含符号声明位置。"
+        },
+        "goRw.hideTestFiles": {
+          "type": "boolean",
+          "default": false,
+          "description": "默认隐藏 _test.go 文件中的引用。"
+        },
+        "goRw.classificationConcurrency": {
+          "type": "integer",
+          "default": 8,
+          "minimum": 1,
+          "maximum": 32,
+          "description": "同时进行读写语义判定的文件数量。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test:unit": "npm run compile && node --test out/test/unit/heuristic.test.js",
+    "test:integration": "npm run compile && node out/test/runIntegration.js",
+    "icon": "node scripts/generate-icon.js",
+    "package": "bash scripts/package.sh",
+    "publish:marketplace": "bash scripts/publish.sh marketplace",
+    "publish:openvsx": "bash scripts/publish.sh openvsx",
+    "publish:all": "bash scripts/publish.sh all"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "@types/vscode": "~1.85.0",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^4.1.1",
+    "ovsx": "^1.4.0",
+    "typescript": "^5.6.3"
+  }
+}
